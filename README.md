@@ -4,7 +4,7 @@ A full-stack system built for a family-owned phone, computer and accessories sto
 IMEI tracking, resellers who buy on credit, reports, and an **AI assistant** (an MCP server) that answers the
 owner's questions from live store data. The interface is in French; prices are in dirhams (DH).
 
-![tests](https://github.com/YOURNAME/mm-store/actions/workflows/ci.yml/badge.svg)
+![tests](https://github.com/Hvdeees/mm-store/actions/workflows/ci.yml/badge.svg)
 
 **Stack:** Python · FastAPI · SQLAlchemy 2.0 · PostgreSQL · Alembic · JWT auth · pytest · Docker · Caddy · GitHub Actions · vanilla JavaScript · Model Context Protocol (MCP)
 
