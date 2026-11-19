@@ -1,0 +1,46 @@
+name: tests
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      # A real PostgreSQL for the tests, so CI tests what production runs (and the concurrency test runs).
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: boutique
+          POSTGRES_PASSWORD: boutique
+          POSTGRES_DB: boutique_test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U boutique" --health-interval 2s --health-retries 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements-dev.txt
+      - name: Tests on SQLite
+        run: pytest -v
+      - name: Tests on PostgreSQL (includes the concurrency test)
+        run: pytest -v
+        env:
+          TEST_DATABASE_URL: postgresql+psycopg://boutique:boutique@localhost:5432/boutique_test
+
+  ai:
+    # MM Store AI (the MCP server): its tests run the real MM Store app in-process, from this same repo.
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mm-store-ai
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r ../requirements.txt -e ".[dev]"
+      - run: pytest -v

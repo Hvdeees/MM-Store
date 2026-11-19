@@ -1,0 +1,58 @@
+# MM Store in production: database + app + Caddy (automatic HTTPS certificates).
+# Started by deploy/setup-server.sh; settings come from the .env file next to this one (never commit it).
+#   docker compose -f docker-compose.prod.yml up -d --build
+services:
+  db:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: boutique
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?missing in .env}
+      POSTGRES_DB: boutique
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U boutique"]
+      interval: 3s
+      retries: 30
+    # no "ports": the database is reachable only by the app, never from the internet
+
+  api:
+    build: .
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql+psycopg://boutique:${POSTGRES_PASSWORD}@db:5432/boutique
+      SECRET_KEY: ${SECRET_KEY:?missing in .env}
+      ENVIRONMENT: production
+      STORE_NAME: ${STORE_NAME:-MM Store}
+      STORE_TIMEZONE: Africa/Casablanca
+      MEDIA_DIR: /code/media
+      FORWARDED_ALLOW_IPS: "*"     # trust Caddy's X-Forwarded-For, so login limits see real visitor addresses
+    volumes:
+      - media:/code/media
+    depends_on:
+      db:
+        condition: service_healthy
+
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      DOMAIN: ${DOMAIN:?missing in .env}
+      ACME_EMAIL: ${ACME_EMAIL:?missing in .env}
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data           # HTTPS certificates
+      - caddy_config:/config
+    depends_on:
+      - api
+
+volumes:
+  pgdata:
+  media:
+  caddy_data:
+  caddy_config:

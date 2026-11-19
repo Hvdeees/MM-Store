@@ -1,0 +1,10 @@
+{
+  // Terminal > Run Task… : "Installer l'assistant IA" once, then "Tester l'assistant IA" whenever you change the code.
+  "version": "2.0.0",
+  "tasks": [
+    { "label": "Installer l'assistant IA", "type": "shell", "command": "bash setup.sh",
+      "group": { "kind": "build", "isDefault": true }, "presentation": { "reveal": "always", "panel": "dedicated" }, "problemMatcher": [] },
+    { "label": "Tester l'assistant IA", "type": "shell", "command": ".venv/bin/pytest -v",
+      "group": { "kind": "test", "isDefault": true }, "presentation": { "reveal": "always", "panel": "dedicated" }, "problemMatcher": [] }
+  ]
+}
